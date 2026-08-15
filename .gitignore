@@ -1,0 +1,53 @@
+/target
+**/*.rs.bk
+
+# The ROS 2 node is its own cargo workspace, so it has its own target dir.
+# colcon builds it into the workspace's build/ tree instead.
+/ros2/octomap_server_rs/target
+
+# C++ reference source, cloned by scripts — not vendored into this repo.
+# See docs/decisions/0002-commit-fixtures-not-reference.md
+/reference-cpp
+
+# C++ reference build output. The generated fixtures under tests/golden/ are
+# committed instead, so the differential tests run without a C++ toolchain.
+/build-cpp
+
+# Written by `cargo run --example write_scene` for the cross-language check.
+# The committed cpp_scene.* fixtures are the inputs; these are throwaway output.
+/tests/golden/rust_scene.ot
+/tests/golden/rust_scene.bt
+
+# Shared benchmark scene, ~1.9 MB. Deterministic from a fixed seed, so it is
+# regenerated rather than committed:
+#     cargo run --release --example dump_bench_fixture
+# The Rust benchmark also writes it on demand if it is missing.
+/tests/bench/
+
+# Fresh benchmark output. The runs that produced the recorded numbers are
+# committed under benchmarks/ instead; these are new, machine-specific logs.
+/cpp-bench-run.log
+/rust-bench-run.log
+/linux-test-run.log
+
+# Secrets and local configuration. None of these are used by the project as it
+# stands; they are listed so that adding one later cannot be committed by
+# accident.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# Editors, OS and local tooling
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+/.claude/
+
+# Cargo.lock is committed. The workspace contains binaries as well as
+# libraries, and a committed lockfile is what makes `cargo test` reproduce the
+# same dependency versions for everyone — see CONTRIBUTING.md. It has no effect
+# on crates that depend on octomap-core.

@@ -1,0 +1,25 @@
+[package]
+name = "octomap_server_rs"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "ROS 2 occupancy mapping node backed by the pure-Rust OctoMap port"
+publish = false
+
+# Its own workspace, and the parent excludes this directory. The node only
+# builds where ROS 2 is installed and sourced — r2r generates its message
+# bindings from the environment at build time — so keeping it inside the parent
+# workspace would break `cargo test --workspace` everywhere else.
+[workspace]
+
+[[bin]]
+name = "octomap_server_rs"
+path = "src/main.rs"
+
+[dependencies]
+octomap-core = { path = "../../crates/octomap-core" }
+octomap-ros = { path = "../../crates/octomap-ros" }
+
+r2r = "0.9"
+futures = "0.3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "signal"] }

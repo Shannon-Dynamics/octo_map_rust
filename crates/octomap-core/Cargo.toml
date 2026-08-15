@@ -1,0 +1,31 @@
+[package]
+name = "octomap-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Memory-safe 3D occupancy mapping in Rust: octree, log-odds occupancy, ray casting and OctoMap-compatible .bt/.ot files"
+readme = "README.md"
+keywords = ["octree", "occupancy", "mapping", "robotics", "octomap"]
+categories = ["science::robotics", "data-structures"]
+
+# The differential test suites live here but their fixtures do not: the golden
+# CSV and the C++-written .bt/.ot files sit in <repo>/tests/golden/, outside
+# this package, because they are shared with the C++ generators under scripts/.
+# `include_str!` resolves them at compile time, so shipping the test files in
+# the .crate would ship files that cannot compile once unpacked. They are a
+# repository-level activity — clone the repo to run them.
+exclude = ["tests/**"]
+
+[lints]
+workspace = true
+
+# Benchmarks only. The library itself has no dependencies beyond `std`, and
+# dev-dependencies are not propagated to downstream crates.
+[dev-dependencies]
+criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "insert_point_cloud"
+harness = false

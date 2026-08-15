@@ -1,0 +1,30 @@
+fixture: 50176 scan / 10000 queries / 1000 directions, checksum 328789090342991
+insert_point_cloud/eager/50176
+                        time:   [140.44 ms 140.89 ms 141.32 ms]
+                        thrpt:  [355.06 Kelem/s 356.13 Kelem/s 357.28 Kelem/s]
+                        time:   [-5.5609% -4.7043% -3.8588%] (p = 0.00 < 0.05)
+                        thrpt:  [+4.0137% +4.9366% +5.8883%]
+insert_point_cloud/lazy_then_finish/50176
+                        time:   [124.86 ms 125.21 ms 125.53 ms]
+                        thrpt:  [399.73 Kelem/s 400.73 Kelem/s 401.87 Kelem/s]
+                        time:   [-5.8621% -4.8224% -3.6748%] (p = 0.00 < 0.05)
+                        thrpt:  [+3.8150% +5.0668% +6.2271%]
+insert_point_cloud/discretized/50176
+                        time:   [85.945 ms 86.515 ms 87.049 ms]
+                        thrpt:  [576.41 Kelem/s 579.97 Kelem/s 583.81 Kelem/s]
+                        time:   [-3.3764% -2.1773% -0.9331%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.9419% +2.2257% +3.4944%]
+populated map: 34105 nodes, 28614 leaves
+query/is_occupied_at/10000
+                        time:   [561.92 µs 563.64 µs 565.40 µs]
+                        thrpt:  [17.687 Melem/s 17.742 Melem/s 17.796 Melem/s]
+                        time:   [-3.4540% -2.7836% -2.0896%] (p = 0.00 < 0.05)
+                        thrpt:  [+2.1342% +2.8633% +3.5776%]
+query/is_occupied_by_key/10000
+                        time:   [352.66 µs 353.92 µs 355.21 µs]
+                        thrpt:  [28.152 Melem/s 28.255 Melem/s 28.356 Melem/s]
+                        time:   [-1.8846% -1.1745% -0.4517%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.4538% +1.1885% +1.9208%]
+populated map: 34105 nodes, 28614 leaves
+cast_ray/casts/1000     time:   [2.7015 ms 2.7086 ms 2.7158 ms]
+                        thrpt:  [368.21 Kelem/s 369.20 Kelem/s 370.17 Kelem/s]

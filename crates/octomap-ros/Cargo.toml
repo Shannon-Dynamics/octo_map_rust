@@ -1,0 +1,25 @@
+[package]
+name = "octomap-ros"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "ROS 2 message conversions for octomap-core: PointCloud2 in, octomap_msgs/Octomap out, no ROS dependency"
+readme = "README.md"
+keywords = ["ros2", "octomap", "pointcloud2", "robotics", "mapping"]
+categories = ["science::robotics"]
+
+[lints]
+workspace = true
+
+# No ROS dependency on purpose. Everything here operates on the plain data a
+# message carries — byte blobs, field descriptors, numbers — so this crate
+# builds and tests anywhere, and the client library binding (r2r, rclrs, a
+# rosbag reader) stays a caller's choice. `ros2/octomap_server_rs` is the r2r
+# side of that boundary.
+#
+# `version` alongside `path` so that a published octomap-ros resolves against
+# the registry: a path-only dependency cannot be published at all.
+[dependencies]
+octomap-core = { path = "../octomap-core", version = "0.1.0" }

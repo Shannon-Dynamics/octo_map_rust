@@ -1,0 +1,21 @@
+# bench_cpp
+# compiler        g++ 10.3.0
+# openmp          disabled -- single-threaded
+# assertions      disabled (NDEBUG)
+# fixture         tests/bench/scene.txt
+# resolution      0.1
+# scan            50176
+# queries         10000
+# directions      1000
+# checksum        328789090342991
+# format          result,name,elements,samples,median_ns,min_ns,max_ns
+result,insert_eager,50176,20,63816500,60953400,66349900
+result,insert_lazy_then_inner,50176,20,55946050,55025900,61023200
+result,insert_lazy_then_inner_and_prune,50176,20,55874050,51715400,64612400
+result,insert_discretized,50176,20,47954850,43862800,51126100
+# populated map   34105 nodes, 28614 leaves
+# addressable keys 10000 of 10000 queries
+result,query_by_coordinate,10000,50,511950,481400,799000
+result,query_by_key,10000,50,419750,385200,606600
+result,cast_ray,1000,50,2226050,2108300,2782400
+# done, sink=4098658

@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = ["crates/octomap-core", "crates/octomap-ros"]
+
+# The r2r node under `ros2/` is its own workspace. It only builds where ROS 2 is
+# installed and sourced, and pulling it in here would break `cargo test
+# --workspace` on every machine that has Rust but not ROS.
+exclude = ["ros2/octomap_server_rs"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "Apache-2.0"
+repository = "https://github.com/Shannon-Dynamics/octo_map_rust"
+description = "Pure-Rust port of the OctoMap probabilistic 3D occupancy mapping library"
+
+# Benchmarks are an internal regression tool, not a claim about this library
+# relative to anything else. The C++ reference they were originally compared
+# against compiles its whole template implementation into one translation unit,
+# so it inlines freely across what would be a crate boundary here; reproducing
+# that on the Rust side needs LTO and a single codegen unit. Without them the
+# numbers measure a missing-inline penalty rather than the algorithms, which
+# makes them useless for spotting a regression.
+# See docs/decisions/0010-lto-in-bench-profile.md.
+[profile.bench]
+lto = true
+codegen-units = 1
+
+[workspace.lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }

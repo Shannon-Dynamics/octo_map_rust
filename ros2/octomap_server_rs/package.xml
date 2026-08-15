@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>octomap_server_rs</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 2 occupancy mapping node backed by octomap-rs, a pure-Rust port of
+    OctoMap. Speaks the same topics and services as octomap_server, with no C++
+    OctoMap in the build.
+  </description>
+
+  <!--
+    ROS requires an email attribute here. Set a contact address you are willing
+    to publish before releasing this package; the placeholder is deliberate.
+  -->
+  <maintainer email="maintainer@example.invalid">Shannon Dynamics</maintainer>
+
+  <!--
+    Apache-2.0, matching LICENSE at the repository root and the `license` field
+    in this package's Cargo.toml. OctoMap's own BSD-3-Clause terms cover the
+    original work this is a port of and are reproduced in NOTICE; they are not
+    the licence of this package.
+  -->
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!--
+    Build dependencies are message packages only. r2r generates its Rust
+    bindings from whatever is on AMENT_PREFIX_PATH at build time, so these have
+    to be present and built before this package — but nothing here links
+    against them at the C++ level.
+  -->
+  <depend>octomap_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2_msgs</depend>
+
+  <exec_depend>tf2_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

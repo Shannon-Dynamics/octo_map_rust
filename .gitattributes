@@ -1,0 +1,17 @@
+# Golden fixtures are compared byte-for-byte against C++ output. Line-ending
+# translation would corrupt that, so they are pinned.
+tests/golden/*.csv text eol=lf
+tests/golden/*.bt  binary
+tests/golden/*.ot  binary
+
+# Shell scripts run under Linux/WSL even when checked out on Windows.
+*.sh text eol=lf
+
+*.rs   text
+*.toml text
+*.md   text
+*.cpp  text
+*.py   text
+*.xml  text
+
+benchmarks/*.log text eol=lf

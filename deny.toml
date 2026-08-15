@@ -1,0 +1,55 @@
+# cargo-deny configuration.
+#
+# Run with `cargo deny check`. CI does not run this yet — it is a maintainer
+# and release-time check, documented in docs/RELEASING.md.
+#
+# The point of this file is not to be exhaustive. It is to make three questions
+# answerable without reading the whole dependency tree: which licences are in
+# it, where the crates come from, and whether any of them carry an advisory.
+
+[advisories]
+# Fail on anything RustSec knows about. No advisory is ignored here; if one
+# ever has to be, the exception belongs in this list with a comment saying why
+# it is not reachable and when it will be revisited.
+ignore = []
+
+[licenses]
+# Every licence permitted in the tree, listed rather than pattern-matched so
+# that a new one shows up as a failure instead of slipping in.
+#
+# - Apache-2.0: this project's own crates.
+# - MIT, BSD-3-Clause, BSD-2-Clause, ISC: the usual permissive set in the Rust
+#   ecosystem, and BSD-3-Clause is also the upstream OctoMap licence recorded
+#   in NOTICE.
+# - Unicode-3.0: carried by unicode-ident, which most proc-macro crates pull.
+# - Zlib, MPL-2.0 are deliberately absent: neither is in the tree today, and
+#   adding one should be a decision rather than an accident.
+#
+# Some of these are not present in the default check's graph, which reports
+# them as "license was not encountered". That is expected: they cover the
+# dev-dependency tree behind `cargo bench`. Removing them would make the first
+# benchmark build fail this check for no good reason.
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "ISC",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.9
+
+[bans]
+# A duplicate major version of the same crate usually means two dependencies
+# disagree about a version. Warn rather than fail: in a tree whose only
+# third-party crates are dev-dependencies, that is information, not a defect.
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+# Only crates.io. A git dependency in a crate intended for publication is a
+# release blocker rather than a style preference — crates.io rejects it — so
+# this is enforced rather than warned about.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

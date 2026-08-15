@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: nothing here writes to the repository, publishes a package,
+# or touches a release. A job that needs more has to ask for it explicitly.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # The whole point of committing the golden fixtures is that the differential
+  # suites run without a C++ toolchain. So CI needs nothing but Rust — and it
+  # runs on both platforms, because the bit-exact comparison depends on libm
+  # agreeing between MinGW and glibc. That agreement is an observation, not a
+  # guarantee; this job is what would catch it breaking.
+  test:
+    name: Test — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      # Third-party actions are pinned to a full commit SHA rather than a tag:
+      # a tag can be moved to point at different code, a SHA cannot. The
+      # trailing comment records which release each SHA corresponds to.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          # Required with a pinned SHA: the action normally reads the toolchain
+          # from the ref name, and a SHA does not name one.
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Run tests
+        run: cargo test --workspace --all-features
+      # Warnings denied: a broken intra-doc link becomes a broken link on
+      # docs.rs, and a published version cannot be fixed in place.
+      - name: Build documentation
+        run: cargo doc --workspace --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  msrv:
+    name: Minimum supported Rust version (1.75)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@63662b0dc43e7762f8a093c614c9992c38609792 # 1.75.0
+        with:
+          toolchain: "1.75.0"
+      - name: Check against the declared MSRV
+        run: cargo check --workspace
+
+  security:
+    name: Dependency advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          toolchain: stable
+      # Both crates depend only on std, so this is expected to stay quiet —
+      # which is exactly why a failure here is worth acting on. It also covers
+      # the dev-dependency tree, which does have third-party crates in it.
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Check RustSec advisories
+        run: cargo audit
+
+  # Publication is manual and irreversible, so what gets shipped is checked on
+  # every push rather than for the first time on release day. `cargo package`
+  # also unpacks each crate and builds it in isolation, which is what catches a
+  # file the crate needs but does not include — LICENSE and NOTICE among them.
+  package:
+    name: Package the publishable crates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          toolchain: stable
+      - name: List the octomap-core package contents
+        run: cargo package --list -p octomap-core
+      - name: List the octomap-ros package contents
+        run: cargo package --list -p octomap-ros
+      - name: Check that the licence and attribution ship inside each crate
+        run: |
+          set -eu
+          for crate in octomap-core octomap-ros; do
+            for file in LICENSE NOTICE; do
+              cmp "$file" "crates/$crate/$file" \
+                || { echo "crates/$crate/$file differs from the root $file"; exit 1; }
+              cargo package --list -p "$crate" | grep -qx "$file" \
+                || { echo "$file is missing from the $crate package"; exit 1; }
+            done
+          done
+      # octomap-core only. octomap-ros depends on octomap-core by version as
+      # well as by path, and until octomap-core is on crates.io that dependency
+      # cannot resolve against the registry — `cargo package -p octomap-ros`
+      # fails at the prepare step for a reason that is not a defect. Its
+      # contents are still checked above with `--list`, which does not resolve.
+      # Add it here once octomap-core is published. See docs/RELEASING.md.
+      - name: Build the octomap-core package
+        run: cargo package -p octomap-core
+      # Expect a warning per test file about targets not included in the
+      # package: tests/ is excluded on purpose, because the golden fixtures
+      # live outside the crate directory. See ADR-0002.
+
+  # ros2/octomap_server_rs is not built here. r2r generates its message
+  # bindings from a sourced ROS 2 installation at compile time, so building it
+  # would mean installing ROS 2 in CI to test a thin transport layer whose
+  # logic already lives in octomap-ros — which the job above does cover.
+  # The node is verified by scripts/ros2/smoke_test.sh; see docs/07-ros2.md.
+
+  docs-links:
+    name: Check documentation links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Every referenced local file exists
+        run: |
+          set -uo pipefail
+          # Relative links resolve against the directory of the file holding
+          # them, so each markdown file is scanned separately. Results go to a
+          # file rather than into a pipe: a `while` on the right of a pipe runs
+          # in a subshell and a flag set inside it is lost.
+          : > /tmp/broken.txt
+          find README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md \
+               SAFETY.md ROADMAP.md docs benchmarks scripts ros2 crates \
+               -name '*.md' -type f > /tmp/md.txt
+          while read -r file; do
+            dir=$(dirname "$file")
+            grep -oE '\]\([^)#]+\)' "$file" \
+              | sed -E 's/^\]\(//; s/\)$//' \
+              | grep -vE '^(https?:|mailto:)' \
+              | while read -r target; do
+                  [ -e "$dir/$target" ] || echo "$file -> $target" >> /tmp/broken.txt
+                done
+          done < /tmp/md.txt
+          if [ -s /tmp/broken.txt ]; then
+            echo "Broken local links:"
+            cat /tmp/broken.txt
+            exit 1
+          fi
+          echo "All local documentation links resolve."
